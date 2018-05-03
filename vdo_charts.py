@@ -6,6 +6,7 @@ from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
 from scipy.stats import linregress
 import json
+import os
 
 
 def create_button(name):
@@ -154,8 +155,18 @@ class Report:
 
         template_cur = str(ticks).join(template_cur.split('XXX_BINS_XXX'))
         template_cur = ylabel.join(template_cur.split('XXX_YLABEL_XXX'))
-        
-        f = open(self.dest + '/' + ID+'.js', 'w')
+
+
+
+
+        try:
+            f = open(self.dest + '/' + ID+'.js', 'w')
+        except IOError as e:
+            if not os.path.isdir("report"):
+                os.mkdir("report")
+                f = open(self.dest + '/' + ID + '.js', 'w')
+            else:
+                raise e
         f.write(template_cur)
         f.close()
 

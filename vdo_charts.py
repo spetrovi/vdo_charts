@@ -43,8 +43,8 @@ def rolling_avg_speed(speed):
 
 # curve smoothing and interpolation
 # window size must be odd 
-def smooth_curve(y, window_size = 101, poly_order = 5):
-    bins_xx = [x for x in range(len(y))]
+def smooth_curve(y, offset, window_size = 101, poly_order = 3):
+    bins_xx = [x for x in range(offset, len(y)+offset)]
 
     #create normalised x axis
     xx = np.linspace(min(bins_xx),max(bins_xx), 600)
@@ -52,6 +52,8 @@ def smooth_curve(y, window_size = 101, poly_order = 5):
     # interpolate + smooth
     itp = interp1d(bins_xx, y)
     yy_sg = savgol_filter(itp(xx), window_size, poly_order)
+
+    yy_sg = map(lambda x: round(x, 2), yy_sg)
     
     return list(xx), list(yy_sg)
     
@@ -72,9 +74,9 @@ def space_saving(logic_blocks, k_blocks, interval):
         
 # generate html document with charts
 class Report:
-    def __init__(self, dest):
+    def __init__(self, dest, filename):
         self.dest = dest
-        self.vdostats_parsed = json.loads(read_file('vdostats_parsed'))
+        self.vdostats_parsed = json.loads(read_file(filename))
         
         # compute additional values here
         self.vdostats_parsed['speed'] = speed(self.vdostats_parsed['logical blocks used'])
@@ -138,10 +140,10 @@ class Report:
                     y_curve = map(lambda x: round(x*100, 2), y)
                 else:
                     y_curve = y
-                
+
                 if smooth:
-                    x_axis, y_curve = smooth_curve(y_curve)
-        
+                    x_axis, y_curve = smooth_curve(y_curve, offset)
+
                 # paste line to template
                 line_cur = str(y_curve).join(line.split('XXX_DATA_XXX'))
                 template_cur = (
@@ -237,5 +239,5 @@ class Report:
         return r
 
 
-r = Report('report')
+r = Report('report', 'vdostats_parsed_jirka.json')
 r.save()
